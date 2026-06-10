@@ -1,9 +1,11 @@
+import json
 import os
 import time
 
 from playwright.sync_api import sync_playwright
 
 BASE_URL = "https://www.strava.com/"
+STATE_FILE = os.environ.get('STRAVA_STATE_FILE', 'strava_state.json')
 
 class KudosGiver:
     """
@@ -11,38 +13,50 @@ class KudosGiver:
     Following.
     """
     def __init__(self, max_run_duration=540) -> None:
-        self.EMAIL = os.environ.get('STRAVA_EMAIL')
-        self.PASSWORD = os.environ.get('STRAVA_PASSWORD')
-
-        if self.EMAIL is None or self.PASSWORD is None:
-            raise Exception("Must set environ variables EMAIL AND PASSWORD. \
-                e.g. run export STRAVA_EMAIL=YOUR_EMAIL")
-
         self.max_run_duration = max_run_duration
         self.start_time = time.time()
         self.num_entries = 100
         self.web_feed_entry_pattern = '[data-testid=web-feed-entry]'
 
+        storage_state = self._load_storage_state()
+
         p = sync_playwright().start()
         self.browser = p.firefox.launch() # does not work in chrome
-        self.page = self.browser.new_page()
+        self.context = self.browser.new_context(storage_state=storage_state)
+        self.page = self.context.new_page()
+
+    def _load_storage_state(self):
+        """
+        Load a Strava session saved by save_session.py. Strava blocks automated
+        login, so we reuse a hand-captured session instead. Accepts the session
+        JSON inline via STRAVA_STATE_JSON (for CI secrets) or a path via
+        STRAVA_STATE_FILE (default: strava_state.json).
+        """
+        inline = os.environ.get('STRAVA_STATE_JSON')
+        if inline:
+            return json.loads(inline)
+        if os.path.exists(STATE_FILE):
+            return STATE_FILE
+        raise Exception(
+            f"No Strava session found. Create one with "
+            f"'python save_session.py' (writes {STATE_FILE}), or set "
+            f"STRAVA_STATE_JSON.")
 
 
-    def email_login(self):
+    def start_session(self):
         """
-        Login using email and password
+        Use the saved session to load the dashboard and read own profile id.
+        Raises if the session is no longer valid (logged out) so we fail loudly
+        instead of silently giving zero kudos.
         """
-        self.page.goto(os.path.join(BASE_URL, 'login'))
-        try:
-            self.page.get_by_role("button", name="Reject").click(timeout=5000)
-        except Exception as _:
-            pass
-        self.page.get_by_role("textbox", name='email').fill(self.EMAIL)
-        self.page.get_by_role("textbox", name="password").fill(self.PASSWORD)
-        self.page.get_by_role("button", name="Log In").click()
-        print("---Logged in!!---")
         self._run_with_retries(func=self._get_page_and_own_profile)
-        
+        if not getattr(self, 'own_profile_id', None):
+            raise Exception(
+                "Session looks logged out (no profile id found). Refresh it "
+                "with 'python save_session.py'.")
+        print("---Session loaded!!---")
+
+
     def _run_with_retries(self, func, retries=3):
         """
         Retry logic with sleep in between tries.
@@ -179,7 +193,7 @@ class KudosGiver:
 
 def main():
     kg = KudosGiver()
-    kg.email_login()
+    kg.start_session()
     kg.give_kudos()
 
 
