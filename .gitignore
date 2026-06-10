@@ -155,4 +155,13 @@ cython_debug/
 # Images
 *png
 
+# Strava session (cookies + localStorage) — effectively a credential. NEVER commit.
+strava_state.json
+
+# Temp login-flow investigation helper — delete before any upstream PR.
+inspect_login.py
+
+# Editor
+.vscode/
+
 .DS_Store
