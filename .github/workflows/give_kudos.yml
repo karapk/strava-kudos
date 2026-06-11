@@ -6,19 +6,28 @@ on:
   workflow_dispatch:
 
 env:
-  STRAVA_EMAIL: ${{ secrets.STRAVA_EMAIL }}
-  STRAVA_PASSWORD: ${{ secrets.STRAVA_PASSWORD }}
+  # Saved Strava session (cookies + localStorage), captured locally via
+  # save_session.py. Set this repo secret to the full contents of
+  # strava_state.json. Login is NOT automated — Strava blocks it.
+  STRAVA_STATE_JSON: ${{ secrets.STRAVA_STATE_JSON }}
+
 jobs:
   run-kudos-cron:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3 
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.9.10'
+          python-version: '3.11'
           cache: 'pip'
       - run: pip install -r requirements.txt
-      - run: playwright install
+      - run: playwright install firefox --with-deps
       - run: python give_kudos.py
-        
+      - name: Upload error screenshot
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-screenshot
+          path: error.png
+          if-no-files-found: ignore

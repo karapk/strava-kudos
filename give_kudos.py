@@ -193,8 +193,18 @@ class KudosGiver:
 
 def main():
     kg = KudosGiver()
-    kg.start_session()
-    kg.give_kudos()
+    try:
+        kg.start_session()
+        kg.give_kudos()
+    except Exception:
+        # Save a screenshot so CI-only failures are debuggable (uploaded as a
+        # failure-only artifact by the workflow), then re-raise to fail the job.
+        try:
+            kg.page.screenshot(path="error.png", full_page=True)
+            print("Saved error.png for debugging.")
+        except Exception as _:
+            pass
+        raise
 
 
 if __name__ == "__main__":
