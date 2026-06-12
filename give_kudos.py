@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import time
 
 from playwright.sync_api import sync_playwright
@@ -172,7 +173,9 @@ class KudosGiver:
         if unfilled_kudos_container.count() == 1:
             unfilled_kudos_container.click(timeout=0, no_wait_after=True)
             print('=', end='')
-            time.sleep(1)
+            # Randomized 1-3s delay between kudos (kept >=1s per the hard
+            # constraint).
+            time.sleep(random.uniform(1, 3))
             return 1
         return 0
 
