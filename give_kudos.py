@@ -188,23 +188,33 @@ class KudosGiver:
             pass
         web_feed_entry_locator = self.page.locator(self.web_feed_entry_pattern)
         self.locate_kudos_buttons_and_maybe_give_kudos(web_feed_entry_locator=web_feed_entry_locator)
-        self.browser.close()
 
 
 def main():
-    kg = KudosGiver()
+    kg = None
     try:
+        kg = KudosGiver()
         kg.start_session()
         kg.give_kudos()
     except Exception:
-        # Save a screenshot so CI-only failures are debuggable (uploaded as a
-        # failure-only artifact by the workflow), then re-raise to fail the job.
-        try:
-            kg.page.screenshot(path="error.png", full_page=True)
-            print("Saved error.png for debugging.")
-        except Exception as _:
-            pass
+        # Best-effort screenshot so CI-only failures are debuggable (uploaded as
+        # a failure-only artifact by the workflow). Only possible once the page
+        # exists; if construction failed earlier there's nothing to capture.
+        if kg is not None and getattr(kg, "page", None) is not None:
+            try:
+                kg.page.screenshot(path="error.png", full_page=True)
+                print("Saved error.png for debugging.")
+            except Exception as _:
+                pass
         raise
+    finally:
+        # Single cleanup point: release the browser on every path, even if init
+        # or the run failed partway through.
+        if kg is not None and getattr(kg, "browser", None) is not None:
+            try:
+                kg.browser.close()
+            except Exception as _:
+                pass
 
 
 if __name__ == "__main__":
