@@ -20,8 +20,8 @@ class KudosGiver:
 
         storage_state = self._load_storage_state()
 
-        p = sync_playwright().start()
-        self.browser = p.firefox.launch() # does not work in chrome
+        self.playwright = sync_playwright().start()
+        self.browser = self.playwright.firefox.launch() # does not work in chrome
         self.context = self.browser.new_context(storage_state=storage_state)
         self.page = self.context.new_page()
 
@@ -208,11 +208,16 @@ def main():
                 pass
         raise
     finally:
-        # Single cleanup point: release the browser on every path, even if init
-        # or the run failed partway through.
+        # Single cleanup point: release the browser and the Playwright driver on
+        # every path, even if init or the run failed partway through.
         if kg is not None and getattr(kg, "browser", None) is not None:
             try:
                 kg.browser.close()
+            except Exception as _:
+                pass
+        if kg is not None and getattr(kg, "playwright", None) is not None:
+            try:
+                kg.playwright.stop()
             except Exception as _:
                 pass
 
