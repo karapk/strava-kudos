@@ -73,8 +73,8 @@ Status key: ✅ done · 🔄 in progress · ⬜ not started · 🚧 blocked
 | 0 | Research; repo chosen over webhook/extension alternatives | ✅ |
 | 1 | Repo forked + cloned; branch strategy set | ✅ |
 | 2 | Local proof of concept (session reuse + full headless run) | ✅ |
-| 3 | Modernize workflow + requirements | 🔄 current |
-| 4 | GitHub Actions setup (user does most in browser) | ⬜ |
+| 3 | Modernize workflow + requirements | ✅ |
+| 4 | GitHub Actions setup (user does most in browser) | 🔄 current |
 | 5 | Schedule & tune cron | ⬜ |
 | 6 | Longevity (keepalive; optional upstream PR) | ⬜ |
 
@@ -94,21 +94,24 @@ Status key: ✅ done · 🔄 in progress · ⬜ not started · 🚧 blocked
 - [x] Re-test **headless** — the validated run above is already headless
       (default `headless=True`) and behaves the same. No UA/viewport tweak
       needed.
-- [ ] QoL (small, optional): screenshot `error.png` on unhandled failure;
-      clearer messages on bare `except`. Do **not** touch feed parsing.
+- [x] QoL: `main()` now screenshots `error.png` on unhandled failure (and
+      re-raises so the job still fails). Feed parsing untouched. Done alongside
+      Phase 3's failure-only artifact upload.
 
 **Acceptance:** `python give_kudos.py` completes **headless** locally using a
 saved session, gives kudos to un-kudoed friend activities, skips own activities
 and club posts, exits cleanly within the duration cap.
 
 ### Phase 3 — Modernize the workflow
-- [ ] `runs-on: ubuntu-20.04` → `ubuntu-latest` (20.04 retired; jobs won't start).
-- [ ] `actions/checkout@v3` → `@v4`; `actions/setup-python@v4` → `@v5`.
-- [ ] Python `3.9.10` → `3.11`+.
-- [ ] `requirements.txt` `playwright==1.30.0` → current tested version.
-- [ ] CI: `playwright install firefox --with-deps`.
-- [ ] Add **failure-only** artifact upload of `error.png`.
-- [ ] Commit + push to fork's `main`.
+- [x] `runs-on: ubuntu-20.04` → `ubuntu-latest` (20.04 retired; jobs won't start).
+- [x] `actions/checkout@v3` → `@v4`; `actions/setup-python@v4` → `@v5`.
+- [x] Python `3.9.10` → `3.11`.
+- [x] `requirements.txt` `playwright==1.30.0` → `1.60.0` (matches local/tested).
+- [x] CI: `playwright install firefox --with-deps`.
+- [x] Add **failure-only** artifact upload of `error.png` (`upload-artifact@v4`,
+      `if: failure()`, `if-no-files-found: ignore`).
+- [x] Workflow `env` now passes **`STRAVA_STATE_JSON`** (not email/password).
+- [ ] Commit + push to fork's `main` (via PR — branch `chore/modernize-workflow`).
 
 ### Phase 4 — GitHub Actions setup (mostly user, in browser)
 - [ ] User enables Actions on the fork.
@@ -166,6 +169,16 @@ now in case a future, non-automated login path opens up.
 ## Change / Decision Log
 _Newest first. One entry per meaningful change or decision._
 
+- **2026-06-11** — **Phase 3: modernized the workflow.** `give_kudos.yml`:
+  `ubuntu-20.04`→`ubuntu-latest`, `checkout@v3`→`@v4`, `setup-python@v4`→`@v5`,
+  Python `3.9.10`→`3.11`, `playwright install`→`playwright install firefox
+  --with-deps`, and a failure-only `error.png` artifact (`upload-artifact@v4`).
+  The `env` block now passes `STRAVA_STATE_JSON` (the saved session) instead of
+  `STRAVA_EMAIL`/`STRAVA_PASSWORD`. `requirements.txt` `playwright`
+  `1.30.0`→`1.60.0` (matches local). `give_kudos.py` `main()` screenshots
+  `error.png` on unhandled failure then re-raises. Done on branch
+  `chore/modernize-workflow`; Phase 4 (user adds the `STRAVA_STATE_JSON` secret +
+  triggers) is next.
 - **2026-06-10** — **Phase 2 acceptance met.** First full session-reuse run:
   `give_kudos.py` loaded `strava_state.json`, walked 100 feed entries headless,
   skipped club posts + own activities, printed `Kudos given: 24`, clean exit. 3
