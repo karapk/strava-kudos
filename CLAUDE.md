@@ -19,6 +19,10 @@ a ~190-line script, not a rewrite.
    why). Flip the phase/checkbox status.
 4. If reality contradicts the spec (e.g. Strava's login flow differs from what's
    described), update the spec first, then code.
+5. **PR review comments (incl. Copilot):** for each comment, review it, then
+   implement the fix or consciously decide against it (with a reason). Fold the
+   fix into the PR the comment is on, and **reply to that comment** recording the
+   resolution (what changed + commit) before the PR is merged.
 
 ## Hard constraints (NEVER violate)
 - **Credentials** only via env vars / GitHub secrets (`STRAVA_EMAIL`,
@@ -114,14 +118,16 @@ and club posts, exits cleanly within the duration cap.
 - [ ] Commit + push to fork's `main` (via PR — branch `chore/modernize-workflow`).
 
 ### Phase 4 — GitHub Actions setup (mostly user, in browser)
-- [ ] User enables Actions on the fork.
-- [ ] User adds repo secret **`STRAVA_STATE_JSON`** = the full contents of
+- [x] Actions enabled on the fork (verified via `gh` — `enabled: true`).
+- [ ] Add repo secret **`STRAVA_STATE_JSON`** = the full contents of
       `strava_state.json` (the saved session). `give_kudos.py` reads it via the
       `STRAVA_STATE_JSON` env var. (Email/password secrets are **no longer
       used** — login is not automated.)
-- [ ] Trigger via `workflow_dispatch`; debug CI-only failures via screenshot
-      artifact. **Note:** the session expires; expect to periodically re-run
-      `save_session.py` locally and update the secret (see Phase 6).
+- [ ] Trigger via `workflow_dispatch`; debug CI-only failures via the **Actions
+      logs** (no screenshot artifact — repo is **public**, so a failure
+      screenshot of the logged-in feed is intentionally not uploaded). **Note:**
+      the session expires; expect to periodically re-run `save_session.py`
+      locally and update the secret (see Phase 6).
 
 ### Phase 5 — Schedule & tune
 - [ ] Default cron = 4 runs/day UTC (`30 5-23/6 * * *`). User is **US Central**.
@@ -169,6 +175,23 @@ now in case a future, non-automated login path opens up.
 ## Change / Decision Log
 _Newest first. One entry per meaningful change or decision._
 
+- **2026-06-18** — **Addressed Copilot review on PR #3 + documented the review
+  process.** Fixed the stale `main()` comment (claimed the screenshot is uploaded
+  as an artifact — untrue since PR #3) and stopped logging the Strava athlete id
+  (`print("id", …)` → `print("Found own profile id.")`), since public-repo
+  Actions logs would expose it (the only identifying output in the script).
+  Added step 5 to "How we work": every PR review comment (incl. Copilot) is
+  reviewed, implemented (or consciously declined), and replied to before merge.
+- **2026-06-17** — **Phase 3 merged (PR #2); dropped the public `error.png`
+  artifact.** PR #2 (workflow modernization + the `main()` cleanup hardening from
+  Copilot review — construction inside `try`, single `finally` that closes the
+  browser and stops the Playwright driver, guarded screenshot) merged to `main`.
+  Then, because the fork is **public**, removed the `upload-artifact` step so a
+  failure screenshot of the logged-in feed isn't world-downloadable;
+  `give_kudos.py` still writes `error.png` locally, and CI failures are diagnosed
+  from the credential-free Actions logs. Phase 4 underway: Actions enabled and
+  the workflow is registered; only the `STRAVA_STATE_JSON` secret remains before
+  a first `workflow_dispatch`.
 - **2026-06-11** — **Phase 3: modernized the workflow.** `give_kudos.yml`:
   `ubuntu-20.04`→`ubuntu-latest`, `checkout@v3`→`@v4`, `setup-python@v4`→`@v5`,
   Python `3.9.10`→`3.11`, `playwright install`→`playwright install firefox

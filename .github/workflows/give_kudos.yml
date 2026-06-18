@@ -24,10 +24,7 @@ jobs:
       - run: pip install -r requirements.txt
       - run: playwright install firefox --with-deps
       - run: python give_kudos.py
-      - name: Upload error screenshot
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: error-screenshot
-          path: error.png
-          if-no-files-found: ignore
+      # No error.png artifact upload: this repo is public, so an uploaded
+      # failure screenshot of the logged-in feed would be world-downloadable.
+      # give_kudos.py still writes error.png locally for debugging; in CI,
+      # diagnose failures from the (credential-free) Actions logs instead.
