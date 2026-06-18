@@ -84,7 +84,8 @@ class KudosGiver:
 
         try:
             self.own_profile_id = self.page.locator(".user-menu > a").get_attribute('href').split("/athletes/")[1]
-            print("id", self.own_profile_id)
+            # Don't log the athlete id — public-repo Actions logs would expose it.
+            print("Found own profile id.")
         except Exception as _:
             print("can't find own profile ID")
 
@@ -197,9 +198,10 @@ def main():
         kg.start_session()
         kg.give_kudos()
     except Exception:
-        # Best-effort screenshot so CI-only failures are debuggable (uploaded as
-        # a failure-only artifact by the workflow). Only possible once the page
-        # exists; if construction failed earlier there's nothing to capture.
+        # Best-effort screenshot for debugging: written locally as error.png,
+        # NOT uploaded in CI (public repo) — diagnose CI failures from the
+        # Actions logs. Only possible once the page exists; if construction
+        # failed earlier there's nothing to capture.
         if kg is not None and getattr(kg, "page", None) is not None:
             try:
                 kg.page.screenshot(path="error.png", full_page=True)

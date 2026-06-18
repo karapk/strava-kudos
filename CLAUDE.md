@@ -19,6 +19,10 @@ a ~190-line script, not a rewrite.
    why). Flip the phase/checkbox status.
 4. If reality contradicts the spec (e.g. Strava's login flow differs from what's
    described), update the spec first, then code.
+5. **PR review comments (incl. Copilot):** for each comment, review it, then
+   implement the fix or consciously decide against it (with a reason). Fold the
+   fix into the PR the comment is on, and **reply to that comment** recording the
+   resolution (what changed + commit) before the PR is merged.
 
 ## Hard constraints (NEVER violate)
 - **Credentials** only via env vars / GitHub secrets (`STRAVA_EMAIL`,
@@ -171,6 +175,13 @@ now in case a future, non-automated login path opens up.
 ## Change / Decision Log
 _Newest first. One entry per meaningful change or decision._
 
+- **2026-06-18** — **Addressed Copilot review on PR #3 + documented the review
+  process.** Fixed the stale `main()` comment (claimed the screenshot is uploaded
+  as an artifact — untrue since PR #3) and stopped logging the Strava athlete id
+  (`print("id", …)` → `print("Found own profile id.")`), since public-repo
+  Actions logs would expose it (the only identifying output in the script).
+  Added step 5 to "How we work": every PR review comment (incl. Copilot) is
+  reviewed, implemented (or consciously declined), and replied to before merge.
 - **2026-06-17** — **Phase 3 merged (PR #2); dropped the public `error.png`
   artifact.** PR #2 (workflow modernization + the `main()` cleanup hardening from
   Copilot review — construction inside `try`, single `finally` that closes the
