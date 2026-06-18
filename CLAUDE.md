@@ -78,11 +78,11 @@ Status key: ✅ done · 🔄 in progress · ⬜ not started · 🚧 blocked
 | 1 | Repo forked + cloned; branch strategy set | ✅ |
 | 2 | Local proof of concept (session reuse + full headless run) | ✅ |
 | 3 | Modernize workflow + requirements | ✅ |
-| 4 | GitHub Actions setup (user does most in browser) | 🔄 current |
-| 5 | Schedule & tune cron | ⬜ |
-| 6 | Longevity (keepalive; optional upstream PR) | ⬜ |
+| 4 | GitHub Actions setup (user does most in browser) | ✅ |
+| 5 | Schedule & tune cron | ✅ |
+| 6 | Longevity (keepalive; optional upstream PR) | 🔄 current |
 
-### Phase 2 — Local proof of concept (CURRENT)
+### Phase 2 — Local proof of concept
 - [x] Create venv, `pip install playwright` (current), `playwright install firefox`.
 - [x] Run **headed** with env vars set; observe where login breaks.
 - [~] ~~Patch `email_login()` for the password path.~~ **ABANDONED** — Strava
@@ -119,20 +119,22 @@ and club posts, exits cleanly within the duration cap.
 
 ### Phase 4 — GitHub Actions setup (mostly user, in browser)
 - [x] Actions enabled on the fork (verified via `gh` — `enabled: true`).
-- [ ] Add repo secret **`STRAVA_STATE_JSON`** = the full contents of
-      `strava_state.json` (the saved session). `give_kudos.py` reads it via the
-      `STRAVA_STATE_JSON` env var. (Email/password secrets are **no longer
-      used** — login is not automated.)
-- [ ] Trigger via `workflow_dispatch`; debug CI-only failures via the **Actions
-      logs** (no screenshot artifact — repo is **public**, so a failure
-      screenshot of the logged-in feed is intentionally not uploaded). **Note:**
-      the session expires; expect to periodically re-run `save_session.py`
-      locally and update the secret (see Phase 6).
+- [x] Secret **`STRAVA_STATE_JSON`** set (full contents of `strava_state.json`;
+      read via the `STRAVA_STATE_JSON` env var). Email/password secrets are
+      **no longer used** — login is not automated.
+- [x] Triggered via `workflow_dispatch` — succeeded (`Kudos given: 65`, 2m46s,
+      2026-06-18); athlete-id redaction verified in the public log. CI failures
+      are debugged via the **Actions logs** (no screenshot artifact on this
+      public repo). **Note:** the session expires; periodically re-run
+      `save_session.py` locally and update the secret (see Phase 6).
 
 ### Phase 5 — Schedule & tune
-- [ ] Default cron = 4 runs/day UTC (`30 5-23/6 * * *`). User is **US Central**.
-- [ ] Adjust to user preference. **Do not exceed ~every 2–3 hours** (Strava
-      kudos throttling + GitHub free minutes).
+- [x] Was 4 runs/day UTC (`30 5-23/6 * * *`).
+- [x] Retuned to user preference: 09:00 / 14:00 / 18:00 / 21:00 **US Central
+      (CDT)** = `0 2,14,19,23 * * *` UTC. 4 runs/day, ≥3h apart (within the "no
+      more than every 2–3 hours" limit). Chose the simple UTC cron over a
+      DST-aware gate job to keep the workflow minimal — accepts a 1h winter
+      (CST) shift, which is fine for this bot.
 
 ### Phase 6 — Longevity
 - [ ] Keepalive: GitHub disables cron workflows after **60 days** of repo
@@ -175,6 +177,14 @@ now in case a future, non-automated login path opens up.
 ## Change / Decision Log
 _Newest first. One entry per meaningful change or decision._
 
+- **2026-06-18** — **Phase 4 done (bot live in CI); Phase 5 cron retuned.**
+  `workflow_dispatch` run succeeded — session reuse worked in CI, `Kudos given:
+  65`, 2m46s, athlete-id redaction held in the public log. Secret set + cron
+  active = the bot now runs automatically. Retuned cron `30 5-23/6 * * *` →
+  `0 2,14,19,23 * * *` (09:00/14:00/18:00/21:00 US Central CDT) for peak
+  activity-completion times; 4 runs/day, ≥3h apart. Chose the simple UTC cron
+  over a DST-aware gate job (keeps the workflow minimal) — accepts a 1h winter
+  shift. Phase 6 (longevity/keepalive) is next.
 - **2026-06-18** — **Addressed Copilot review on PR #3 + documented the review
   process.** Fixed the stale `main()` comment (claimed the screenshot is uploaded
   as an artifact — untrue since PR #3) and stopped logging the Strava athlete id

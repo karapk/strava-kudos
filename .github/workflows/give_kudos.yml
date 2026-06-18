@@ -2,7 +2,10 @@ name: Give Strava Kudos
 
 on:
   schedule:
-    - cron: "30 5-23/6 * * *"
+    # 09:00, 14:00, 18:00, 21:00 US Central (CDT, UTC-5) — peak time for
+    # completed activities. GitHub cron is UTC and does NOT observe DST, so in
+    # winter (CST, UTC-6) these land one hour earlier locally; retune if needed.
+    - cron: "0 2,14,19,23 * * *"
   workflow_dispatch:
 
 env:
