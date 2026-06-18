@@ -80,7 +80,7 @@ Status key: ✅ done · 🔄 in progress · ⬜ not started · 🚧 blocked
 | 3 | Modernize workflow + requirements | ✅ |
 | 4 | GitHub Actions setup (user does most in browser) | ✅ |
 | 5 | Schedule & tune cron | ✅ |
-| 6 | Longevity (keepalive; optional upstream PR) | 🔄 current |
+| 6 | Longevity (keepalive — manual by choice; upstream PR optional) | ✅ |
 
 ### Phase 2 — Local proof of concept
 - [x] Create venv, `pip install playwright` (current), `playwright install firefox`.
@@ -137,8 +137,11 @@ and club posts, exits cleanly within the duration cap.
       (CST) shift, which is fine for this bot.
 
 ### Phase 6 — Longevity
-- [ ] Keepalive: GitHub disables cron workflows after **60 days** of repo
-      inactivity. Add an action or documented periodic-commit habit.
+- [~] Keepalive: **decided not to automate** (2026-06-18). GitHub disables cron
+      workflows after **60 days** of repo inactivity but **emails a warning
+      first** — the user will respond to that email manually (a trivial commit /
+      re-enable) rather than maintain a keepalive action. Revisit only if the
+      manual approach proves annoying.
 - [ ] (Optional, later) Clean PR back to upstream from a branch off
       `upstream/main` with **only the general fixes** (runner bump, action bumps,
       Playwright upgrade, login fix) — exclude personal cron changes. Open an
@@ -177,6 +180,11 @@ now in case a future, non-automated login path opens up.
 ## Change / Decision Log
 _Newest first. One entry per meaningful change or decision._
 
+- **2026-06-18** — **Phase 6: keepalive intentionally not automated.** GitHub
+  disables scheduled workflows after 60 days of repo inactivity (emailing a
+  warning first); decided against a keepalive action — the user will act on that
+  email manually. The optional upstream PR remains a later, separate task. With
+  this, the bot is live and the project is in a steady/maintenance state.
 - **2026-06-18** — **Phase 4 done (bot live in CI); Phase 5 cron retuned.**
   `workflow_dispatch` run succeeded — session reuse worked in CI, `Kudos given:
   65`, 2m46s, athlete-id redaction held in the public log. Secret set + cron
