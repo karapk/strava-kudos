@@ -82,7 +82,7 @@ Status key: ✅ done · 🔄 in progress · ⬜ not started · 🚧 blocked
 | 5 | Schedule & tune cron | ✅ |
 | 6 | Longevity (keepalive; optional upstream PR) | 🔄 current |
 
-### Phase 2 — Local proof of concept (CURRENT)
+### Phase 2 — Local proof of concept
 - [x] Create venv, `pip install playwright` (current), `playwright install firefox`.
 - [x] Run **headed** with env vars set; observe where login breaks.
 - [~] ~~Patch `email_login()` for the password path.~~ **ABANDONED** — Strava
